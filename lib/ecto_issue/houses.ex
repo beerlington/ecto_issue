@@ -11,8 +11,21 @@ defmodule EctoIssue.Houses do
         exists(
           Dog
           |> where([d], d.age > 0)
-          |> Repo.all()
         )
     )
+    |> select([h], %{count: count(h.id)})
+    |> Repo.all()
+  end
+
+  def get_frag do
+    House
+    |> join(:inner, [h], assoc(h, :dogs), as: :dog)
+    |> having(
+      [h, dog: d],
+      sum(d.age) > 0 or
+        fragment("exists(select 1 from dogs where age > 0)")
+    )
+    |> select([h], %{count: count(h.id)})
+    |> Repo.all()
   end
 end
